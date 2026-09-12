@@ -1,0 +1,811 @@
+/* cf-bbs — Catppuccin Mocha ベースのミニマルUI */
+
+:root {
+  --base: #1e1e2e;
+  --mantle: #181825;
+  --crust: #11111b;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --surface2: #585b70;
+  --overlay0: #6c7086;
+  --text: #cdd6f4;
+  --subtext1: #bac2de;
+  --subtext0: #a6adc8;
+  --blue: #89b4fa;
+  --lavender: #b4befe;
+  --sapphire: #74c7ec;
+  --teal: #94e2d5;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --peach: #fab387;
+  --maroon: #eba0ac;
+  --red: #f38ba8;
+  --mauve: #cba6f7;
+
+  /* テーマ切替で差し替わる派生色（ダーク既定値） */
+  --topbar-bg: rgba(24, 24, 37, 0.72);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-soft-strong: rgba(255, 255, 255, 0.1);
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ホワイト（ライト）モード: Catppuccin Latte ベース。
+   <html data-theme="light"> が設定されたときだけ上書きされる
+   （theme.jsがlocalStorageの設定を描画前に反映する）。 */
+html[data-theme="light"] {
+  --base: #eff1f5;
+  --mantle: #e6e9ef;
+  --crust: #dce0e8;
+  --surface0: #ccd0da;
+  --surface1: #bcc0cc;
+  --surface2: #9ca0b0;
+  --overlay0: #8c8fa1;
+  --text: #4c4f69;
+  --subtext1: #5c5f77;
+  --subtext0: #6c6f85;
+  --blue: #1e66f5;
+  --lavender: #7287fd;
+  --sapphire: #209fb5;
+  --teal: #179299;
+  --green: #40a02b;
+  --yellow: #df8e1d;
+  --peach: #fe640b;
+  --maroon: #e64553;
+  --red: #d20f39;
+  --mauve: #8839ef;
+
+  --topbar-bg: rgba(230, 233, 239, 0.82);
+  --border-soft: rgba(0, 0, 0, 0.08);
+  --border-soft-strong: rgba(0, 0, 0, 0.16);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Yu Gothic", "Noto Sans JP", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.app-shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 96px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: -20px -16px 20px;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.topbar h1 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.topbar .nav-links {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 14px;
+  color: var(--subtext0);
+  overflow-x: auto;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.topbar .nav-links::-webkit-scrollbar {
+  display: none;
+}
+.topbar .nav-links a {
+  flex-shrink: 0;
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 980px;
+  padding: 9px 18px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--blue);
+  color: var(--crust);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn.secondary {
+  background: var(--surface0);
+  color: var(--text);
+}
+.btn.danger {
+  background: var(--red);
+  color: var(--crust);
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--blue);
+  padding: 9px 10px;
+}
+.btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.card {
+  background: var(--mantle);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+/* cardクラスをbutton要素に使った場合（管理画面の統計カード等）は、
+   ブラウザ既定のボタン色（ダークテーマで黒文字になり見えない）ではなく
+   テーマの文字色・フォントを引き継がせる（v10修正）。 */
+button.card {
+  color: inherit;
+  font: inherit;
+}
+
+/* スレッド名検索ボックス行（トップページ・v10新設） */
+.search-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.search-row input {
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0;
+}
+
+.topbar-user {
+  font-weight: 600;
+}
+
+.logout-card {
+  margin-top: 32px;
+}
+
+/* 設定画面の「アカウントを削除」（退会）カード。危険操作と分かるよう
+   赤系の枠で強調する（ログアウトカードの下＝ページ最下部に配置）。 */
+.danger-zone {
+  margin-top: 16px;
+  border-color: rgba(220, 80, 80, 0.45);
+}
+
+.danger-zone > label {
+  color: #d96060;
+}
+
+.thread-item {
+  display: block;
+  background: var(--mantle);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.thread-item:hover {
+  background: var(--surface0);
+  text-decoration: none;
+}
+.thread-item .thread-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.thread-item .thread-meta {
+  font-size: 12.5px;
+  color: var(--subtext0);
+}
+
+.post-item {
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: var(--mantle);
+  border: 1px solid var(--border-soft);
+}
+.post-item .post-meta {
+  font-size: 12px;
+  color: var(--subtext0);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.post-item .post-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 14.5px;
+}
+.post-item.hidden-post {
+  opacity: 0.5;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  width: 100%;
+  background: var(--surface0);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 11px 13px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+input:focus,
+textarea:focus {
+  border-color: var(--blue);
+}
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--subtext1);
+  margin: 12px 0 6px;
+}
+label:first-child {
+  margin-top: 0;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--overlay0);
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.banner {
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.banner.error {
+  background: rgba(243, 139, 168, 0.14);
+  color: var(--red);
+  border: 1px solid rgba(243, 139, 168, 0.3);
+}
+.banner.success {
+  background: rgba(166, 227, 161, 0.14);
+  color: var(--green);
+  border: 1px solid rgba(166, 227, 161, 0.3);
+}
+.banner.info {
+  background: rgba(137, 180, 250, 0.12);
+  color: var(--blue);
+  border: 1px solid rgba(137, 180, 250, 0.25);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--subtext0);
+  padding: 48px 16px;
+  font-size: 14px;
+}
+
+.center-page {
+  max-width: 380px;
+  margin: 10vh auto 0;
+  padding: 0 16px;
+}
+
+.center-page h1 {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.center-page p.subtitle {
+  color: var(--subtext0);
+  font-size: 14px;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+table.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+table.admin-table th,
+table.admin-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+table.admin-table th {
+  color: var(--subtext0);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 980px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.tag.new {
+  background: rgba(249, 226, 175, 0.18);
+  color: var(--yellow);
+}
+.tag.regular {
+  background: rgba(166, 227, 161, 0.18);
+  color: var(--green);
+}
+.tag.admin {
+  background: rgba(203, 166, 247, 0.18);
+  color: var(--mauve);
+}
+.tag.banned {
+  background: rgba(243, 139, 168, 0.18);
+  color: var(--red);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-soft);
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tabs button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--subtext0);
+  padding: 10px 4px;
+  margin-right: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.tabs button.active {
+  color: var(--text);
+  border-bottom-color: var(--blue);
+}
+
+.char-counter {
+  font-size: 12px;
+  color: var(--overlay0);
+  text-align: right;
+  margin-top: 4px;
+}
+.char-counter.warn {
+  color: var(--yellow);
+}
+.char-counter.over {
+  color: var(--red);
+}
+
+#turnstile-container {
+  margin: 12px 0;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* v11: サーバー切替＝ラベル（お気に入り/おすすめ）＋チップ行＋「サーバ一覧へ」 */
+.server-switcher {
+  margin-bottom: 14px;
+}
+.switcher-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--subtext0);
+  margin-bottom: 6px;
+}
+.server-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.server-chip-row::-webkit-scrollbar {
+  display: none;
+}
+.server-chip {
+  flex-shrink: 0;
+  appearance: none;
+  border: 1px solid var(--border-soft-strong);
+  background: var(--mantle);
+  color: var(--subtext1);
+  border-radius: 980px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.server-chip.active {
+  background: var(--blue);
+  color: var(--crust);
+  border-color: transparent;
+}
+/* 一覧ページへの導線チップ（リンク。破線枠で「押すと移動」と区別） */
+.server-chip-row .server-list-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  border-style: dashed;
+  color: var(--blue);
+}
+.server-chip-row .server-list-link:hover {
+  background: var(--surface0);
+  text-decoration: none;
+}
+
+/* お気に入り（★）トグルボタン（サーバ一覧ページ・設定ページのサーバー行） */
+.star-btn {
+  flex-shrink: 0;
+  appearance: none;
+  border: 1px solid var(--border-soft-strong);
+  background: var(--mantle);
+  color: var(--subtext1);
+  border-radius: 8px;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.star-btn:hover {
+  background: var(--surface0);
+}
+.star-btn.active {
+  color: #f9e2af;
+  border-color: rgba(249, 226, 175, 0.5);
+}
+:root[data-theme="light"] .star-btn.active {
+  color: #b8860b;
+  border-color: rgba(184, 134, 11, 0.45);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface0) 25%, var(--surface1) 37%, var(--surface0) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: var(--radius-md);
+  height: 56px;
+  margin-bottom: 10px;
+}
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   PC / スマホ対応
+   ------------------------------------------------------------------
+   ベースはモバイルファーストに近い可変幅（.app-shell max-width:720px）で
+   既に大半のPC/スマホ双方をカバーしているが、以下は特に狭い画面
+   （幅480px前後のスマホ）でタップ操作しやすいよう調整する。
+   ------------------------------------------------------------------ */
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 14px 12px 96px;
+  }
+  .topbar {
+    padding: 12px;
+    margin: -14px -12px 16px;
+    gap: 8px;
+  }
+  .topbar h1 {
+    font-size: 15px;
+  }
+  .topbar .nav-links {
+    font-size: 13px;
+    gap: 10px;
+  }
+  .card,
+  .thread-item,
+  .post-item {
+    padding: 12px;
+    border-radius: var(--radius-md);
+  }
+  .center-page {
+    margin-top: 6vh;
+  }
+  /* 横に長い表は個別セルを折り返さず、カード全体を横スクロールさせる */
+  table.admin-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* iOSでinput/textareaのfont-sizeが16px未満だとフォーカス時に自動ズーム
+   されてしまうため、画面幅を問わず16px以上を確保する。 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  font-size: 16px;
+}
+
+/* タップ領域を指の大きさに対して十分に確保する（Appleのヒューマンインター
+   フェースガイドライン等で推奨される44px相当）。 */
+.btn,
+.tabs button,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  min-height: 44px;
+}
+.btn.small {
+  min-height: 36px;
+}
+
+/* PC（広い画面）では中央寄せの読みやすい幅を保ちつつ、細かい要素の
+   タッチターゲットサイズはそのままで問題ない（マウス操作のため）。 */
+@media (min-width: 900px) {
+  .app-shell {
+    max-width: 760px;
+  }
+}
+
+
+/* ------------------------------------------------------------------
+   サーバ一覧（設定ページ）
+   ------------------------------------------------------------------ */
+.server-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.server-icon.anonymous {
+  color: var(--mauve);
+}
+.server-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--base);
+  margin-bottom: 8px;
+}
+.server-row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.server-row .server-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.server-row .server-url {
+  font-size: 12px;
+  color: var(--subtext0);
+  word-break: break-all;
+}
+.server-register {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+/* 日次ヘルスチェック結果のバッジ（稼働中/応答なし/未確認） */
+.server-health {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft-strong);
+  color: var(--subtext0);
+  white-space: nowrap;
+}
+.server-health.up {
+  color: #a6e3a1;
+  border-color: rgba(166, 227, 161, 0.45);
+}
+.server-health.down {
+  color: #f38ba8;
+  border-color: rgba(243, 139, 168, 0.45);
+}
+:root[data-theme="light"] .server-health.up {
+  color: #1a7f37;
+}
+:root[data-theme="light"] .server-health.down {
+  color: #b32438;
+}
+
+/* ---------------------------------------------------------------------------
+ * 戻るボタン行（スレッド画面）とブランドリンク（トップバー見出し）
+ * ------------------------------------------------------------------------- */
+.back-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 2px 0 12px;
+}
+.topbar h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+.topbar h1 a:hover {
+  opacity: 0.85;
+}
+
+/* ---------------------------------------------------------------------------
+ * 管理画面「スレッド」タブ
+ * ------------------------------------------------------------------------- */
+.thread-admin-row {
+  padding: 12px 14px;
+}
+.thread-admin-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.thread-admin-title {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: auto;
+}
+.thread-admin-title:hover {
+  color: var(--blue);
+}
+.tag.st-visible {
+  background: rgba(166, 227, 161, 0.18);
+  color: var(--green);
+}
+.tag.st-hidden {
+  background: rgba(249, 226, 175, 0.18);
+  color: var(--yellow);
+}
+.tag.st-deleted {
+  background: rgba(243, 139, 168, 0.18);
+  color: var(--red);
+}
+.tag.st-shard {
+  background: rgba(137, 180, 250, 0.18);
+  color: var(--blue);
+}
+
+/* ---------------------------------------------------------------------------
+   高度な機能（APIキー管理・v11新設）
+   --------------------------------------------------------------------------- */
+.advanced-subtitle {
+  margin: 4px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.api-key-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  word-break: break-all;
+  background: var(--mantle);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-top: 8px;
+  user-select: all; /* クリックで全文選択（手動コピー時の取りこぼし防止） */
+}
+.api-key-snippet {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  word-break: break-all;
+  white-space: pre-wrap;
+  background: var(--mantle);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin: 8px 0 0;
+  color: var(--subtext1);
+}
+.api-key-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

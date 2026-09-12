@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>cf-bbs — 新規登録</title>
+<script src="/theme.js"></script>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div class="center-page" id="app">
+  <h1>新規登録</h1>
+  <p class="subtitle">登録直後は「新規ユーザー」として扱われます</p>
+  <div id="banner-host"></div>
+  <label for="username">ユーザー名（任意・20文字以内。空欄なら「名無しさん」）</label>
+  <input type="text" id="username" maxlength="20" autocomplete="nickname" />
+  <label for="email">メールアドレス（半角）</label>
+  <input type="email" id="email" autocomplete="email" />
+  <label for="password">パスワード（8〜20文字・半角）</label>
+  <input type="password" id="password" maxlength="20" autocomplete="new-password" />
+  <div id="turnstile-container"></div>
+  <div class="form-actions">
+    <button class="btn" id="submit-btn">登録する</button>
+  </div>
+  <p class="field-hint"><a href="/login.html">既にアカウントをお持ちの方はこちら</a></p>
+</div>
+<script src="/common.js"></script>
+<script src="/register.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>cf-bbs — ログイン</title>
+<script src="/theme.js"></script>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div class="center-page" id="app">
+  <h1>ログイン</h1>
+  <p class="subtitle">cf-bbs へおかえりなさい</p>
+  <div id="banner-host"></div>
+  <label for="email">メールアドレス（半角）</label>
+  <input type="email" id="email" autocomplete="email" />
+  <label for="password">パスワード（半角）</label>
+  <input type="password" id="password" autocomplete="current-password" />
+  <div id="turnstile-container"></div>
+  <div class="form-actions">
+    <button class="btn" id="submit-btn">ログイン</button>
+  </div>
+  <p class="field-hint"><a href="/register.html">アカウントをお持ちでない方はこちら</a></p>
+</div>
+<script src="/common.js"></script>
+<script src="/login.js"></script>
+</body>
+</html>
