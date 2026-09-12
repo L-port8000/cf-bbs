@@ -1,6 +1,7 @@
 # cf-bbs
 
 [Normalサーバのセットアップガイド](https://github.com/L-port8000/cf-bbs/tree/normal)
+
 [Incognitoサーバのセットアップガイド](https://github.com/L-port8000/cf-bbs/tree/incognito)
 
 
