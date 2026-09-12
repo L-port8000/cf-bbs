@@ -1,0 +1,112 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "cf-bbs"
+main = "src/index.ts"
+compatibility_date = "2025-04-07"
+compatibility_flags = ["nodejs_compat"]
+
+# ------------------------------------------------------------------
+# 静的フロントエンド（public/ 配下）。Free Plan でも静的アセット配信は
+# 無制限・無料（Workers リクエスト数にカウントされない）。
+# ------------------------------------------------------------------
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# ------------------------------------------------------------------
+# 環境変数（機密情報でないもののみ。機密情報は `wrangler secret put` で設定）
+# ------------------------------------------------------------------
+[vars]
+ENVIRONMENT = "production"
+# このWorkerが「Primary」か「Backup」かを示す（Primary/Backup構成の説明はREADME参照）
+DEPLOYMENT_ROLE = "primary"
+# 投稿APIのPrimary/Backupドメイン（フロントエンドのfailover判定に使用）。
+# 自分のサーバーの実URL（例: xxx.workers.dev）に書き換えること
+PRIMARY_API_DOMAIN = "bbs.example.com"
+BACKUP_API_DOMAIN = "bbs-backup.example.workers.dev"
+# 空文字が既定（Cookieドメイン共有なし）。設定条件はREADME参照。
+COOKIE_DOMAIN = ""
+# Turnstile サイトキー（公開情報。秘密鍵はsecretで別途設定）
+TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
+# 初回デプロイ時に管理者へ昇格させるメールアドレス（初期セットアップ用。setup完了後は空にして良い）
+BOOTSTRAP_ADMIN_EMAIL = ""
+# 複数サーバー選択画面(/servers.html)で自分がどう名乗るか
+SERVER_DISPLAY_NAME = "サーバー1"
+
+# ------------------------------------------------------------------
+# /status（管理者向け利用率表示）用。任意機能で、未設定でも他機能には
+# 影響しない。D1/KVのIDはWorkerランタイムから自分のバインディングIDを
+# 取得する手段が無いため、[[d1_databases]]等と同じ値をここにも書く
+# （二重管理になるが、Cloudflareの制約上やむを得ない）。
+# CF_ACCOUNT_IDはCloudflareダッシュボードのURLやwrangler whoamiで確認できる。
+# WORKER_SCRIPT_NAMEは冒頭の name と同じ値にしておくこと。
+# ------------------------------------------------------------------
+CF_ACCOUNT_ID = ""
+WORKER_SCRIPT_NAME = "cf-bbs"
+# ↓の4つは [[d1_databases]] / [[kv_namespaces]] のIDと必ず同じ値にする（/status用）。
+# scripts/setup.sh は自動で設定する。手動の場合は README「サーバーの建て方」参照。
+DB_MAIN_ID = "REPLACE-WITH-DB-MAIN-ID"
+DB_SHARD_1_ID = "REPLACE-WITH-DB-SHARD1-ID"
+DB_SHARD_2_ID = "REPLACE-WITH-DB-SHARD2-ID"
+SESSIONS_KV_ID = "REPLACE-WITH-KV-NAMESPACE-ID"
+
+# ------------------------------------------------------------------
+# D1 databases: Main + Shard1 + Shard2（README記載の手順で作成したのち、
+# database_id を実際の値に置き換えること）。
+# R2は使用しない。Shard2の容量が逼迫した場合は、これ以上シャードを増やす
+# 代わりに保持期間(data_retention_days)を超えた投稿を削除して容量を確保する
+# （詳細はsrc/db/sharding.tsとREADMEを参照）。
+# ------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB_MAIN"
+database_name = "cf-bbs-main"
+database_id = "REPLACE-WITH-DB-MAIN-ID"
+migrations_dir = "migrations/main"
+
+[[d1_databases]]
+binding = "DB_SHARD_1"
+database_name = "cf-bbs-shard1"
+database_id = "REPLACE-WITH-DB-SHARD1-ID"
+migrations_dir = "migrations/shard"
+
+[[d1_databases]]
+binding = "DB_SHARD_2"
+database_name = "cf-bbs-shard2"
+database_id = "REPLACE-WITH-DB-SHARD2-ID"
+migrations_dir = "migrations/shard"
+
+# ------------------------------------------------------------------
+# KV: 【v2で使用停止（JWT/HMAC認証へ移行したため消費ゼロ）】
+# 旧バージョンとの互換・緊急ロールバック用にバインディングのみ残置している。
+# 削除する場合はバインディングとnamespaceを消して npx wrangler deploy すればよい
+# （コードからは一切参照されない）。
+# 投稿のRate Limit（1日上限・投稿間隔・ログイン試行制御）はCache APIで実装
+# （無料枠・追加設定不要。src/utils/cacheCounter.ts参照）。
+# ------------------------------------------------------------------
+[[kv_namespaces]]
+binding = "SESSIONS_KV"
+id = "REPLACE-WITH-KV-NAMESPACE-ID"
+
+# ------------------------------------------------------------------
+# Cron Trigger（Free Planの上限「3本/Worker」以内）:
+#   "59 14 * * *" = 23:59 JST  自サーバーのアクセス統計を全サーバーへ共有
+#                              + 日次メンテナンス（移行・保持期間削除）
+#                              + HMACモードの期限切れセッション掃除
+#   "0  15 * * *" =  0:00 JST  チェック担当サーバー（前日アクセス少ない順に
+#                              最大3サーバー）が全サーバーの生存確認
+#   "1  15 * * *" =  0:01 JST  担当サーバーがチェック結果を全サーバーへ公開し、
+#                              非担当サーバーは担当から結果を取得して更新
+# （移行・削除はCPU/Subrequest制限を考慮し1回あたり少数スレッドのみ処理。
+#  詳細はsrc/routes/cluster.ts・src/db/sharding.ts・README参照）
+# ------------------------------------------------------------------
+[triggers]
+crons = ["59 14 * * *", "0 15 * * *", "1 15 * * *"]
+
+# 本番運用前に以下を必ず実施すること（README参照）:
+#   wrangler secret put TURNSTILE_SECRET_KEY
+#   wrangler secret put PASSWORD_PEPPER
+#   wrangler secret put SESSION_HMAC_SECRET
+#   wrangler secret put CSRF_HMAC_SECRET
+#   wrangler secret put SYNC_SECRET
+#   wrangler secret put ADMIN_BOOTSTRAP_TOKEN
+# 以下は/status機能を使う場合のみ必要（任意）:
+#   wrangler secret put CF_API_TOKEN
