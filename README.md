@@ -1,5 +1,9 @@
 # cf-bbs
 
+[Normalサーバのセットアップガイド](https://github.com/L-port8000/cf-bbs/tree/normal)
+[Incognitoサーバのセットアップガイド](https://github.com/L-port8000/cf-bbs/tree/incognito)
+
+
 Cloudflare Workers + D1 + Turnstile + TypeScript + Wrangler で構築した、
 **Cloudflare Free Plan での実運用を想定した BBS** です。個人〜小規模コミュニティ
 での運用を主なターゲットにしています（理由は「既知の制約」を参照）。
